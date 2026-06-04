@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="theme-color" content="#342116"/><link rel="manifest" href="manifest.json"/><link rel="icon" href="icon.svg"/>
-<title>Kopi Tidar v4</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Kopi Tidar v5</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg:#f6efe5;--card:#fffaf2;--text:#2c2118;--muted:#756656;--primary:#70401f;--primary2:#a86532;--line:#e0d1bd;--danger:#b64040;--good:#25734c;--shadow:0 12px 28px rgba(70,42,24,.14)}
 *{box-sizing:border-box}html,body{min-height:100%;scroll-behavior:auto}body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(135deg,#fbf0df,#e9dcc8);color:var(--text)}
@@ -30,21 +30,12 @@ canvas{max-height:310px}.pill{padding:5px 9px;border-radius:999px;background:#f1
 @media print{header,.tabs,.actions,.installBox,#backup{display:none!important}body{background:white}.card{box-shadow:none;border:1px solid #ddd}}
 </style></head>
 <body>
-<div id="setupPage" class="authPage hide"><div class="card loginBox">
-<h1>☕ Setup Kopi Tidar</h1><p class="small">Buat akun admin pertama untuk perangkat/browser ini.</p>
-<label>Username Admin</label><input id="setupUser" autocomplete="off"/>
-<label>Password Admin</label><input id="setupPass" type="password" autocomplete="new-password"/>
-<label>Ulangi Password</label><input id="setupPass2" type="password" autocomplete="new-password"/>
-<div class="actions"><button class="btn" onclick="setupAdmin()">Buat Admin</button></div>
-<p class="small">Tidak ada username/password default yang ditampilkan.</p>
-</div></div>
-
 <div id="loginPage" class="authPage hide"><div class="card loginBox">
 <h1>☕ Kopi Tidar</h1><p class="small">Masuk ke aplikasi.</p>
 <label>Username</label><input id="loginUser" autocomplete="username"/>
 <label>Password</label><input id="loginPass" type="password" autocomplete="current-password"/>
 <div class="actions"><button class="btn" onclick="login()">Login</button></div>
-<p class="small">Login memakai akun admin yang dibuat saat setup, atau akun pegawai dari panel admin.</p>
+<p class="small">Masuk menggunakan akun admin atau akun pegawai yang dibuat dari panel admin.</p>
 </div></div>
 
 <div id="app" class="hide">
@@ -114,19 +105,26 @@ canvas{max-height:310px}.pill{padding:5px 9px;border-radius:999px;background:#f1
 
 <script>
 const defaultProducts=[{id:crypto.randomUUID(),name:"Americano",price:12000},{id:crypto.randomUUID(),name:"Ori",price:10000},{id:crypto.randomUUID(),name:"Kopsu Rasa",price:13000},{id:crypto.randomUUID(),name:"Gula Aren",price:14000},{id:crypto.randomUUID(),name:"Matcha",price:15000},{id:crypto.randomUUID(),name:"Coklat",price:14000},{id:crypto.randomUUID(),name:"Red Velvet",price:15000},{id:crypto.randomUUID(),name:"Taro",price:15000}];
-function freshDB(){return{products:defaultProducts,reports:[],cash:[],employees:[],settings:{adminUser:"",adminPass:"",adminReady:false}}}
-let old=JSON.parse(localStorage.getItem("kopiTidarV3")||"null");
-let db=JSON.parse(localStorage.getItem("kopiTidarV4")||"null")||freshDB();
-if(old&&!localStorage.getItem("kopiTidarV4")){db.products=old.products||defaultProducts;db.reports=old.reports||[];db.cash=old.cash||[];db.employees=old.employees||[];db.settings={adminUser:"",adminPass:"",adminReady:false};localStorage.setItem("kopiTidarV4",JSON.stringify(db));}
-let session=JSON.parse(sessionStorage.getItem("kopiTidarSessionV4")||"null");let quickQty={},charts={},deferredPrompt;
+const DEFAULT_ADMIN_USER="adminkopdar";
+const DEFAULT_ADMIN_PASS="kopitidarselaluenak";
+function freshDB(){return{products:defaultProducts,reports:[],cash:[],employees:[],settings:{adminUser:DEFAULT_ADMIN_USER,adminPass:DEFAULT_ADMIN_PASS,adminReady:true}}}
+let oldV4=JSON.parse(localStorage.getItem("kopiTidarV4")||"null");
+let oldV3=JSON.parse(localStorage.getItem("kopiTidarV3")||"null");
+let db=JSON.parse(localStorage.getItem("kopiTidarV5")||"null")||freshDB();
+if(!localStorage.getItem("kopiTidarV5")){
+  const old=oldV4||oldV3;
+  if(old){db.products=old.products||defaultProducts;db.reports=old.reports||[];db.cash=old.cash||[];db.employees=old.employees||[];}
+  db.settings={adminUser:DEFAULT_ADMIN_USER,adminPass:DEFAULT_ADMIN_PASS,adminReady:true};
+  localStorage.setItem("kopiTidarV5",JSON.stringify(db));
+}
+let session=JSON.parse(sessionStorage.getItem("kopiTidarSessionV5")||"null");let quickQty={},charts={},deferredPrompt;
 const today=()=>new Date().toISOString().slice(0,10),ym=()=>new Date().toISOString().slice(0,7);
-function save(){localStorage.setItem("kopiTidarV4",JSON.stringify(db))}
+function save(){localStorage.setItem("kopiTidarV5",JSON.stringify(db))}
 function rupiah(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(n||0)}
-function showOnly(which){setupPage.classList.add("hide");loginPage.classList.add("hide");app.classList.add("hide");document.getElementById(which).classList.remove("hide");window.scrollTo({top:0,left:0,behavior:"instant"});}
-function setupAdmin(){const u=setupUser.value.trim(),p=setupPass.value,p2=setupPass2.value;if(!u||!p)return alert("Username dan password admin wajib diisi.");if(p.length<6)return alert("Password minimal 6 karakter.");if(p!==p2)return alert("Ulangi password belum sama.");db.settings={adminUser:u,adminPass:p,adminReady:true};save();alert("Admin berhasil dibuat. Silakan login.");showOnly("loginPage");}
-function login(){const u=loginUser.value.trim(),p=loginPass.value;if(db.settings.adminReady&&u===db.settings.adminUser&&p===db.settings.adminPass){session={role:"admin",name:"Admin Kopi Tidar",username:u}}else{const emp=db.employees.find(e=>e.username===u&&e.password===p);if(emp){session={role:"pegawai",name:emp.name,username:emp.username}}else{return alert("Username atau password salah.")}}sessionStorage.setItem("kopiTidarSessionV4",JSON.stringify(session));boot()}
-function logout(){sessionStorage.removeItem("kopiTidarSessionV4");session=null;showOnly("loginPage")}
-function boot(){if(!db.settings.adminReady){showOnly("setupPage");return}if(session){showOnly("app");userBadge.textContent=session.role==="admin"?"Admin":session.name;document.querySelectorAll(".adminOnly").forEach(x=>x.style.display=session.role==="admin"?"inline-block":"none");document.querySelectorAll(".adminOnlyBlock").forEach(x=>x.style.display=session.role==="admin"?"block":"none");setDates();showPage("dashboard");renderAll()}else{showOnly("loginPage")}}
+function showOnly(which){loginPage.classList.add("hide");app.classList.add("hide");document.getElementById(which).classList.remove("hide");window.scrollTo({top:0,left:0,behavior:"instant"});}
+function login(){const u=loginUser.value.trim(),p=loginPass.value;if(db.settings.adminReady&&u===db.settings.adminUser&&p===db.settings.adminPass){session={role:"admin",name:"Admin Kopi Tidar",username:u}}else{const emp=db.employees.find(e=>e.username===u&&e.password===p);if(emp){session={role:"pegawai",name:emp.name,username:emp.username}}else{return alert("Username atau password salah.")}}sessionStorage.setItem("kopiTidarSessionV5",JSON.stringify(session));boot()}
+function logout(){sessionStorage.removeItem("kopiTidarSessionV5");session=null;showOnly("loginPage")}
+function boot(){if(session){showOnly("app");userBadge.textContent=session.role==="admin"?"Admin":session.name;document.querySelectorAll(".adminOnly").forEach(x=>x.style.display=session.role==="admin"?"inline-block":"none");document.querySelectorAll(".adminOnlyBlock").forEach(x=>x.style.display=session.role==="admin"?"block":"none");setDates();showPage("dashboard");renderAll()}else{showOnly("loginPage")}}
 function showPage(id){document.querySelectorAll(".page").forEach(p=>p.classList.add("hide"));document.getElementById(id).classList.remove("hide");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));[...document.querySelectorAll(".tab")].find(t=>t.getAttribute("onclick")?.includes("'"+id+"'"))?.classList.add("active");window.scrollTo({top:0,left:0,behavior:"instant"});}
 function setDates(){["reportDate","cashDate"].forEach(id=>{let e=document.getElementById(id);if(e&&!e.value)e.value=today()});if(!monthPick.value)monthPick.value=ym();adminUser.value=db.settings.adminUser;adminPass.value=""}
 function inRange(date){const s=filterStart.value,e=filterEnd.value;return(!s||date>=s)&&(!e||date<=e)}
@@ -161,11 +159,11 @@ function addEmployee(){const name=newEmpName.value.trim(),username=newEmpUser.va
 function deleteEmployee(id){if(confirm("Hapus akun pegawai ini?")){db.employees=db.employees.filter(e=>e.id!==id);save();renderAll()}}
 function renderEmployees(){employeeTable.innerHTML=`<tr><th>Nama</th><th>Username</th><th>Password</th><th>Aksi</th></tr>`+db.employees.map(e=>`<tr><td>${e.name}</td><td>${e.username}</td><td>${e.password}</td><td><button class="danger" onclick="deleteEmployee('${e.id}')">Hapus</button></td></tr>`).join("")}
 function exportCSV(){let csv="Tanggal,Pekerja,Produk,Qty,Harga,Total,Cash,QRIS,Selisih,Status\n";db.reports.forEach(r=>r.items.forEach(i=>csv+=`${r.date},${r.worker},${i.productName},${i.qty},${i.price},${i.total},${r.cash||0},${r.qris||0},${r.diff||0},${r.status||'Cocok'}\n`));download("laporan-kopi-tidar.csv",csv,"text/csv")}
-function exportJSON(){download("backup-kopi-tidar-v4.json",JSON.stringify(db,null,2),"application/json")}
+function exportJSON(){download("backup-kopi-tidar-v5.json",JSON.stringify(db,null,2),"application/json")}
 function importJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.products||!d.reports||!d.cash)throw 0;db=d;if(!db.employees)db.employees=[];save();renderAll();alert("Restore berhasil.")}catch(err){alert("File backup tidak valid.")}};r.readAsText(f)}
 function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
 function saveSettings(){const u=adminUser.value.trim(),p=adminPass.value;if(!u)return alert("Username admin wajib diisi.");db.settings.adminUser=u;if(p)db.settings.adminPass=p;db.settings.adminReady=true;save();adminPass.value="";alert("Admin tersimpan.")}
-function clearAll(){if(confirm("Yakin reset semua data di browser ini?")){localStorage.removeItem("kopiTidarV4");sessionStorage.removeItem("kopiTidarSessionV4");location.reload()}}
+function clearAll(){if(confirm("Yakin reset semua data di browser ini?")){localStorage.removeItem("kopiTidarV5");sessionStorage.removeItem("kopiTidarSessionV5");location.reload()}}
 function renderAll(){if(!session)return;renderWorkerSelect();renderProducts();renderQuickInput();renderCash();renderDashboard();renderReport();renderMonthly();renderEmployees()}
 if('serviceWorker'in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("./service-worker.js");
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;installBox.style.display="block"});
