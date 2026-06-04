@@ -1,0 +1,17 @@
+{
+  "name": "Kopi Tidar",
+  "short_name": "Kopi Tidar",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f5efe6",
+  "theme_color": "#342116",
+  "description": "Aplikasi pencatatan penjualan harian Kopi Tidar.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
