@@ -55,8 +55,8 @@ canvas{max-height:310px}.pill{padding:5px 9px;border-radius:999px;background:#f1
 
 <section id="dashboard" class="page grid">
 <div class="card span12"><div class="row"><div><label>Dari tanggal</label><input type="date" id="filterStart"/></div><div><label>Sampai tanggal</label><input type="date" id="filterEnd"/></div></div><div class="actions"><button class="btn" onclick="renderAll()">Terapkan</button><button class="btn2" onclick="setPreset('today')">Hari Ini</button><button class="btn2" onclick="setPreset('week')">Minggu Ini</button><button class="btn2" onclick="setPreset('month')">Bulan Ini</button><button class="btn2" onclick="resetFilter()">Reset</button></div></div>
-<div class="card span3"><div class="stat"><h2 id="todayRevenue">Rp0</h2><p>Omzet Hari Ini</p></div></div>
-<div class="card span3"><div class="stat"><h2 id="monthRevenue">Rp0</h2><p>Omzet Bulan Ini</p></div></div>
+<div class="card span3"><div class="stat"><h2 id="todayRevenue">Rp0</h2><p>Omset Hari Ini</p></div></div>
+<div class="card span3"><div class="stat"><h2 id="monthRevenue">Rp0</h2><p>Omset Bulan Ini</p></div></div>
 <div class="card span3"><div class="stat"><h2 id="cashQrisToday">Rp0</h2><p>Cash + QRIS Hari Ini</p></div></div>
 <div class="card span3"><div class="stat"><h2 id="statProfit">Rp0</h2><p>Laba Bersih Filter</p></div></div>
 <div class="card span6"><h3>Pendapatan vs Pengeluaran</h3><canvas id="cashChart"></canvas></div><div class="card span6"><h3>Varian Paling Laku</h3><canvas id="variantChart"></canvas></div>
@@ -69,7 +69,7 @@ canvas{max-height:310px}.pill{padding:5px 9px;border-radius:999px;background:#f1
 <div class="row3"><div><label>Total Cash</label><input type="number" id="cashPaid" min="0" value="0" oninput="renderQuickInput()"/></div><div><label>Total QRIS</label><input type="number" id="qrisPaid" min="0" value="0" oninput="renderQuickInput()"/></div><div><label>Status Cocok</label><input id="matchStatus" readonly/></div></div>
 <div class="stat" style="margin-top:14px"><h2 id="quickTotal">Rp0</h2><p>Total omset dari produk yang diinput</p></div>
 <div class="actions"><button class="good" onclick="saveWorkerReport()">Simpan Laporan</button><button class="btn2" onclick="resetQuickInput()">Kosongkan</button></div>
-<p class="small">Cash + QRIS harus sama dengan total omzet. Kalau belum sama, laporan ditandai “Selisih”.</p>
+<p class="small">Cash + QRIS harus sama dengan total omset. Kalau belum sama, laporan ditandai “Selisih”.</p>
 </div>
 <div class="card span4"><h3>Ringkasan Input</h3><div id="quickSummary"></div></div>
 </section>
